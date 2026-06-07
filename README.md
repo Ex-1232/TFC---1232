@@ -19,9 +19,6 @@ En este repositorio se puede encontrar:
 
 La carpeta de documentación incluye todo el proceso de desarrollo del sistema, desde su concepción inicial hasta la versión final.
 
-https://github.com/Ex-1232/TFC---1232/blob/main/Diagrama%20de%20flujo
-![Texto alternativo para la imagen](https://github.com/Ex-1232/TFC---1232/blob/main/Diagrama%20de%20flujo)
-
 En ella se detalla:
 
 ### Inicio del proyecto
@@ -61,6 +58,8 @@ Este workflow implementa la lógica principal del asistente:
 - Propuestas de mejora
 
 El diseño se ha realizado completamente en n8n, priorizando una arquitectura modular y fácilmente modificable.
+
+![Texto alternativo para la imagen](https://github.com/Ex-1232/TFC---1232/blob/main/Diagrama%20de%20flujo)
 
 ---
 
