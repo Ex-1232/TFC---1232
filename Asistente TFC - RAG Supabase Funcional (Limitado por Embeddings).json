@@ -1,0 +1,435 @@
+{
+  "name": "Asistente TFC - RAG Supabase Funcional (Limitado por Embeddings)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1RE8lUjd4gsbbghXYWxP4Znw4MLYeihRo",
+          "mode": "list"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        816
+      ],
+      "name": "Google Drive Trigger",
+      "id": "2befec1c-8d28-4ca8-b4c4-d2dce6aa7421",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bEauaWm6dMMvrjzz",
+          "name": "TFC - RAG"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1RE8lUjd4gsbbghXYWxP4Znw4MLYeihRo",
+            "mode": "list",
+            "cachedResultName": "TFC-RAG",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1RE8lUjd4gsbbghXYWxP4Znw4MLYeihRo"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -240,
+        816
+      ],
+      "name": "Search files",
+      "id": "e6c696d0-8b77-4fdd-b943-af8de236ff61",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bEauaWm6dMMvrjzz",
+          "name": "TFC - RAG"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json.id}}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        336,
+        640
+      ],
+      "name": "Download file",
+      "id": "b5777343-80b7-43d6-8c0c-69da6e98488a",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bEauaWm6dMMvrjzz",
+          "name": "TFC - RAG"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        1344
+      ],
+      "name": "Gemini Chat Model",
+      "id": "5788d161-c460-49fc-b816-a94ff7101dc7",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "N5XB6LX8I5euFeOV",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        1120
+      ],
+      "name": "Chat Trigger",
+      "id": "61f7913f-f3b9-458c-9e95-3872c0c9b23d",
+      "webhookId": "e5aa91ee-7962-4fb8-b5cb-950d1210acb7"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Busca fragmentos exactos en ISO 27001, GDPR, ENS y política MIDTECH S.A. Devuelve texto literal con contexto.",
+        "tableName": {
+          "__rl": true,
+          "value": "documentos_seguridad",
+          "mode": "list",
+          "cachedResultName": "documentos_seguridad"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        1344
+      ],
+      "name": "Supabase Vector Store (Retriever)",
+      "id": "97bc1038-25e5-46f0-b71c-fcff534d3093",
+      "credentials": {
+        "supabaseApi": {
+          "id": "bOpvjpKhPJR2macU",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Eres un auditor experto en ciberseguridad y cumplimiento normativo para MIDTECH S.A. Tu objetivo es responder a las consultas del usuario evaluando la política interna de la empresa frente a los marcos regulatorios.\n\nSigue estrictamente estas reglas para formular tu respuesta:\n1. Utiliza ÚNICAMENTE el contexto provisto por tu herramienta de búsqueda. Si la información no está en los documentos, responde indicando que no dispones de datos indexados para responder, sin inventar nada.\n2. Realiza un análisis cruzado: contrasta lo que dice la política interna de MIDTECH con las exigencias de la normativa consultada.\n3. Cita obligatoriamente de forma explícita las fuentes: menciona la sección o apartado específico de la política de MIDTECH y el número de artículo o sección de la norma (ej. Artículo 32 del GDPR). Las respuestas sin citas concretas de ambas no están permitidas.\n4. Concluye siempre con un estado claro de cumplimiento: \"Cumple\", \"Cumplimiento parcial\" o \"No cumple\".\n5. Informa de posibles mejoras que se pueden llevar a cabo para el cumplimiento en caso de que no se cumpla.\n6. Mantén un tono técnico, formal y directo, omitiendo introducciones innecesarias o saludos."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        1120
+      ],
+      "id": "e86ebe11-8c4b-42fd-8be1-ef3a956b01e0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        560,
+        864
+      ],
+      "name": "Embeddings",
+      "id": "14c79ff0-220a-4587-8ea3-3c4f342f6527",
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "N5XB6LX8I5euFeOV",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documentos_seguridad",
+          "mode": "list"
+        },
+        "embeddingBatchSize": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        640
+      ],
+      "name": "Supabase Vector Store (Insert)",
+      "id": "a5890f7f-46ee-422d-bad6-84c785c774a5",
+      "credentials": {
+        "supabaseApi": {
+          "id": "bOpvjpKhPJR2macU",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkSize": 1500,
+        "chunkOverlap": 150,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        768,
+        1072
+      ],
+      "name": "Text Splitter",
+      "id": "f88f1031-c5a8-45f6-a830-18cd6e525d15"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        864
+      ],
+      "name": "Document Loader",
+      "id": "f27f75af-a819-4da5-8d30-bc3dce92772c"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        112,
+        816
+      ],
+      "id": "921134e8-d395-4961-bd3a-d4df6cc00a93",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        816
+      ],
+      "id": "6ec17e82-62c9-45e8-ac1f-3eadaeb6a130",
+      "name": "Wait",
+      "webhookId": "6365ee21-c61c-43c0-8217-3d8886834eb4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store (Insert)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store (Retriever)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store (Insert)",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Supabase Vector Store (Retriever)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store (Insert)",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store (Insert)": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "563ee43b-e80a-45e7-807e-86b939e3de31",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c5fab2c46a83a09387f904f0d02db529697265d0a97fa0f61e8e87a0c38d0f19"
+  },
+  "nodeGroups": [],
+  "id": "OgiCrRGa8UAbtbz5",
+  "tags": []
+}
