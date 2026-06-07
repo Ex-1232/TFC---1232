@@ -20,6 +20,7 @@ En este repositorio se puede encontrar:
 La carpeta de documentación incluye todo el proceso de desarrollo del sistema, desde su concepción inicial hasta la versión final.
 
 https://github.com/Ex-1232/TFC---1232/blob/main/Diagrama%20de%20flujo
+![Texto alternativo para la imagen](https://github.com/Ex-1232/TFC---1232/blob/main/Diagrama%20de%20flujo)
 
 En ella se detalla:
 
