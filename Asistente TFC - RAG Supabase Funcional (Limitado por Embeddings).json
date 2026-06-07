@@ -1,5 +1,5 @@
 {
-  "name": "Asistente TFC - RAG Supabase Funcional (Limitado por Embeddings)",
+  "name": "Asistente TFC - RAG Supabase Funcional (Limitado por el uso de modelos gratuitos)",
   "nodes": [
     {
       "parameters": {
